@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My PDF Chatbot</title>
+</head>
+<body>
+    <h1>My PDF RAG Chatbot</h1>
+    <p>Welcome to my first AI project!</p>
+    <input type="file" id="pdfInput" accept=".pdf">
+    <button id="uploadBtn">Upload PDF</button>
+    <p id="uploadStatus"></p>
+    <script>
+
+    // Each piece in our html file has a variable associated with it so we can reference it in our script
+    const uploadBtn = document.getElementById("uploadBtn");
+    const pdfInput = document.getElementById("pdfInput");
+    const uploadStatus = document.getElementById('uploadStatus');
+
+    // this will add functionality to our button
+    uploadBtn.addEventListener("click", async function() {
+        // index the latest file the user input
+        const file = pdfInput.files[0];
+        // if there is no file
+        if (!file) {
+            console.log("Please select a PDF first!");
+            return;
+        }
+        // form data is like an empty bucket where we can set the history of our uploads
+        const formData = new FormData();
+        formData.append("file", file);
+        console.log(formData.get("file").name);
+
+        uploadStatus.textContent = "Upload and Processing PDF...";
+        // temporarily disabling the upload button so that the user doesn't try to upload something as the server process is happening 
+        uploadBtn.disabled = true;
+
+        // In case the server crashes and uvicorn can't connect to the server + FastAPI, then we need to 
+        // tell the user that there has been a system error 
+        try {
+            // js sending out /upload http request 
+            const response = await fetch("/upload",{
+                method: "POST",
+                body: formData
+            });
+            // provides us with the json file which contains info such as chunk count, embedding count, and the filename which is present in our /upload function in main.py
+            const data = await response.json();
+
+            
+            // If the response is ok, it will return a message, and it won't if the response is not ok
+            if (response.ok){
+                uploadStatus.textContent = `Successfully uploaded ${data.filename} with ${data.chunk_count} chunks!`;
+            }
+            else {
+                uploadStatus.textContent = "Upload failed. Please try again."
+            }
+
+        } catch(error) {
+            uploadStatus.textContent = "Cannot connect to server!";
+            console.error(error);
+        // this will run regradless of what happesn
+        } finally {
+            uploadBtn.disabled = false;
+        }
+    });
+
+    </script>
+
+</body>
+</html>

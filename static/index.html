@@ -7,15 +7,25 @@
 <body>
     <h1>My PDF RAG Chatbot</h1>
     <p>Welcome to my first AI project!</p>
-    <input type="file" id="pdfInput" accept=".pdf">
+    <input type="file" id="pdfInput2" accept=".pdf">
     <button id="uploadBtn">Upload PDF</button>
     <p id="uploadStatus"></p>
+    <h2>Chat with your PDF</h2>
+    <div id="chatMessages"></div>
+    <input type = "text"
+            id = "questionInput"
+            placeholder = "Ask a question about your PDF"
+    >
+    <button id="askBtn"> </button> 
     <script>
 
     // Each piece in our html file has a variable associated with it so we can reference it in our script
     const uploadBtn = document.getElementById("uploadBtn");
     const pdfInput = document.getElementById("pdfInput");
     const uploadStatus = document.getElementById('uploadStatus');
+    const questionInput = document.getElementById('questionInput')
+    const askBtn = document.getElementByID('askBtn')
+    const chatMessages = document.getElementByID('chatMessages')
 
     // this will add functionality to our button
     uploadBtn.addEventListener("click", async function() {
@@ -26,11 +36,11 @@
             console.log("Please select a PDF first!");
             return;
         }
-        // form data is like an empty bucket where we can set the history of our uploads
+        // form data is like an empty bucket with the history of our uplaods
         const formData = new FormData();
         formData.append("file", file);
         console.log(formData.get("file").name);
-
+        // this writes text into the existing element 
         uploadStatus.textContent = "Upload and Processing PDF...";
         // temporarily disabling the upload button so that the user doesn't try to upload something as the server process is happening 
         uploadBtn.disabled = true;
@@ -40,6 +50,7 @@
         try {
             // js sending out /upload http request 
             const response = await fetch("/upload",{
+                // POST is how this function knows we're sending information OUT to the server
                 method: "POST",
                 body: formData
             });
@@ -63,8 +74,41 @@
             uploadBtn.disabled = false;
         }
     });
+    askBtn.addEventListener("click", async function(){
+        // Once the user types their question and clicks, the .value catches their response
+        const question = questionInput.value.trim();
+        console.log(question)
+        // this is the user's question displayed for the user
+        const userMessage = document.createElement('p');
+        userMessage.textContent = question;
+        chatMessages.appendChild(userMessage);
+        // afterwards this response is stored in data as a JS object along with its colleciton_name
+        const data = {
+                    question: question,
+                    collection_name: "uploaded_pdf"
+                };
+         // once again, we're sending an HTTP request to the ask end point     
+        const response = await fetch("/ask", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            // Converts JS object into JSON so it can be sent 
+            body: JSON.stringify(data)
+            });
+        // reads JSON Response from fastAPI (backend) and converts it to Javascript (front end) value so we can use it. Reading Response
+        const result = await response.json()
+        console.log(result.the_answer)
+
+        // We're creating a new element, writing the result of the backend JSON data, and appending it to chatMessages so the user can see it
+        const botMessage = document.createElement('p');
+        botMessage.textContent = result.the_answer;
+        // displaying ollama's answer
+        chatMessages.appendChild(botMessage);
+    });
 
     </script>
+
 
 </body>
 </html>

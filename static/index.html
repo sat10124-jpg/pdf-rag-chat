@@ -97,7 +97,7 @@
             body: JSON.stringify(data)
             });
         // reads JSON Response from fastAPI (backend) and converts it to Javascript (front end) value so we can use it. Reading Response
-        const result = await response.json()
+        const result = response.json()
         console.log(result.the_answer)
 
         // We're creating a new element, writing the result of the backend JSON data, and appending it to chatMessages so the user can see it
@@ -105,6 +105,7 @@
         botMessage.textContent = result.the_answer;
         // displaying ollama's answer
         chatMessages.appendChild(botMessage);
+        
     });
 
     </script>

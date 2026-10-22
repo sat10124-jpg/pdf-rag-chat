@@ -2,9 +2,12 @@
 from fastapi import FastAPI, File, UploadFile
 from pydantic import BaseModel
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 # This is our Fast API
 app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 class QuestionRequest(BaseModel):
     question: str
     collection_name: str
